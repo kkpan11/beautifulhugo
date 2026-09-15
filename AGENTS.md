@@ -1,0 +1,51 @@
+# Agent Notes: Beautiful Hugo Theme
+
+This is a **Hugo theme**, not a standalone site. All changes are template-level (Go templates, HTML, CSS/JS, YAML i18n). There is no package manager, build tool, or test suite beyond Hugo's own build.
+
+## Quick Build / Verify
+
+To preview changes locally, build the example site with the parent directory as the themes root:
+
+```bash
+hugo --minify -s exampleSite
+```
+
+If you want to see the site served, you can start a live server with:
+
+```bash
+hugo serve -s exampleSite --disableFastRender
+```
+
+## Hugo Version
+
+- **Minimum Hugo version**: `0.146.2`, declared in `hugo.toml` (`[module.hugoVersion]`) and in `theme.toml` (`min_version`, for the themes gallery).
+- Hugo only writes a **warning** if `[module.hugoVersion]` is not satisfied, for modules and for classic `themes/` use. `layouts/_default/baseof.html` keeps an `errorf` to stop the build.
+- **CI matrix** tests against `0.146.2`, `0.155.2`, and `0.163.0`. `--panicOnWarning` makes the module warning a CI failure.
+- The deploy workflow pins `0.163.0`.
+- The theme declares `extended = false`: it has no SCSS and no WebP encoding, so the **standard** Hugo edition is sufficient. CI still uses the extended binary.
+
+## Theme Configuration (`hugo.toml`)
+
+Hugo merges only some sections of a theme configuration into the site configuration. `params` merge deeply and site values win. Sections such as `[markup]` are **not** merged, so Chroma and goldmark settings must stay in the site configuration (`exampleSite/hugo.toml`).
+
+## Architecture
+
+- `layouts/` — Go HTML templates, partials, shortcodes, and default page layouts.
+- `assets/` — Theme-owned CSS and JS (`main.css`, `dark.css`, `main.js`, and similar). Loaded through the `css.html` and `js.html` partials (backed by `asset.html`), which concatenate into one CSS and one JS bundle, minify in production only (`hugo.IsProduction`), fingerprint, and emit SRI `integrity` attributes. Do not hand-minify these files. Theme JS runs after all vendored libraries, so it must not be needed by inline scripts earlier in the page.
+- `static/` — Vendored third-party assets (Bootstrap 5.3.5, Font Awesome, KaTeX, PhotoSwipe, Highlight.js, Mermaid) plus self-hosted fonts. `mermaid.js` is the exception: it lives in `assets/js/` so upgrades bust the cache, and is passed through `js.html` with `minify false`.
+- `exampleSite/` — Demo content (`content/`, `hugo.toml`, and custom `layouts/partials/head_custom.html` / `footer_custom.html`).
+- `i18n/` — Translation strings in YAML.
+- `data/beautifulhugo/social.toml` — Social icon registry consumed by `layouts/partials/footer.html`.
+
+## Agent Gotchas
+
+- **`[Params.author]` is required; `[author]` is deprecated.** `layouts/partials/footer.html` emits an explicit `errorf` if the old top-level `[author]` key is still present.
+- **Asset loading is conditional on `selfHosted`.** When `Params.selfHosted = true`, the theme serves Bootstrap, Font Awesome, KaTeX, Google Fonts, and PhotoSwipe from `static/`. When `false` (default), it loads them from CDNs. If you add or bump a vendored asset, update both the `static/` copy and the CDN conditional in `layouts/partials/head.html` and `layouts/partials/footer.html`.
+- **Syntax highlighting is also conditional.** `useHLJS = true` switches to client-side Highlight.js (`static/js/highlight.min.js` + `static/css/highlight.min.css`). Otherwise it relies on Hugo's built-in Chroma and `assets/css/syntax.css`.
+- **Shortcodes provided:** `details`, `columns` / `column` / `endcolumns`, `beautifulfigure` (backwards-compatible `figure` alias), `gallery`, `mermaid`.
+- **`disableFigureOverride` flag.** Set `Params.disableFigureOverride = true` to restore Hugo's native `<figure>` shortcode (the PhotoSwipe-enhanced version remains available as `beautifulfigure`).
+- **Image processing only applies to resources.** `layouts/partials/func/image-resource.html` resolves a path to a page-bundle or `assets/` image; `static/` paths and URLs return `""` and callers must keep a plain-URL fallback. `Params.imageProcessing = false` disables it.
+- **Multilingual** is supported via the standard Hugo `languages` config with per-language `contentDir`.
+- **No unit tests exist.** The CI only confirms the example site builds cleanly across the Hugo version matrix. Run the build command above before opening a PR.
+- **Use `relURL` instead of `absURL` for all asset and page URLs in templates.** `absURL` produces absolute URLs that break when the site is deployed under a subpath (e.g. `example.com/blog/`). `relURL` generates relative URLs that work correctly regardless of the `baseURL` configuration. Similarly, prefer `relLangURL` over `absLangURL`. Note: `absURL` is still acceptable in structured-data JSON-LD and Open Graph / Twitter meta tags where absolute URLs are required by the spec.
+- **Features must be documented in the example site.** When adding or changing a feature, update the relevant page under `exampleSite/content/page/` (especially `configuration.md` and `pages-and-layouts.md`).

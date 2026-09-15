@@ -23,6 +23,12 @@ title = "GitLab"
 icon = "fab fa-gitlab"
 
 [[social_icons]]
+id = "git"
+url = "%s"
+title = "Git Forge"
+icon = "fab fa-git-alt"
+
+[[social_icons]]
 id = "bitbucket"
 url = "https://bitbucket.org/%s"
 title = "Bitbucket"
@@ -32,7 +38,7 @@ icon = "fab fa-bitbucket"
 id = "twitter"
 url = "https://twitter.com/%s"
 title = "Twitter"
-icon = "fab fa-twitter"
+icon = "fab fa-x-twitter"
 
 [[social_icons]]
 id = "slack"
@@ -214,3 +220,33 @@ id = "about"
 url = "%s"
 title = "About"
 icon = "fas fa-at"
+
+[[social_icons]]
+id = "lastfm"
+url = "https://www.last.fm/user/%s"
+title = "Last.fm"
+icon = "fab fa-lastfm"
+
+[[social_icons]]
+id = "bluesky"
+url = "https://bsky.app/profile/%s"
+title = "Bluesky"
+icon = "fab fa-bluesky"
+
+[[social_icons]]
+id = "orcid"
+url = "https://orcid.org/%s"
+title = "ORCID"
+icon = "fab fa-orcid"
+
+[[social_icons]]
+id = "googlescholar"
+url = "https://scholar.google.com/citations?user=%s"
+title = "Google Scholar"
+icon = "fas fa-graduation-cap"
+
+[[social_icons]]
+id = "goodreads"
+url = "https://goodreads.com/%s"
+title = "Goodreads"
+icon = "fab fa-goodreads"
